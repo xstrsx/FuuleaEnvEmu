@@ -1,9 +1,11 @@
 package com.fr0z863xf.FuEmu
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.os.Environment
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -11,8 +13,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
@@ -23,6 +27,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat.startActivity
 import com.fr0z863xf.FuEmu.ui.theme.FuEmuTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -35,6 +40,11 @@ import java.net.HttpURLConnection
 import java.net.URL
 import androidx.core.net.toUri
 import androidx.core.content.edit
+import org.json.JSONException
+import java.io.File
+import java.io.FileWriter
+import kotlin.concurrent.write
+import kotlin.io.path.exists
 
 data class GitHubAsset(val name: String, val browserDownloadUrl: String)
 data class GitHubReleaseInfo(
@@ -78,7 +88,7 @@ fun MainScreen() {
             if (newPart > currentPart) return true
             if (newPart < currentPart) return false
         }
-        return false // Versions are identical or format is unexpected
+        return false
     }
 
     fun checkForUpdates() {
@@ -154,25 +164,21 @@ fun MainScreen() {
             TopAppBar(
                 title = { Text("FuEmu") },
                 actions = {
+                    Text(if (isCheckingForUpdate) "正在检查更新..." else "检查更新->")
                     IconButton(onClick = { checkForUpdates() }, enabled = !isCheckingForUpdate) {
-                        Icon(Icons.Filled.Refresh, contentDescription = "Check for updates")
+                        Icon(Icons.Filled.Refresh, contentDescription = "检查更新")
+
                     }
                 }
             )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                val packageName = "com.fuulea.venus.g"
-                val launchIntent = context.packageManager.getLaunchIntentForPackage(packageName)
-                if (launchIntent != null) {
-                    try {
-                        context.startActivity(launchIntent)
-                    } catch (e: Exception) {
-                        Toast.makeText(context, "启动失败: ${e.message}", Toast.LENGTH_LONG).show()
-                    }
-                } else {
-                    Toast.makeText(context, "未安装辅立码课", Toast.LENGTH_SHORT).show()
-                }
+                val launchIntent = Intent(Intent.ACTION_MAIN)
+                launchIntent.addCategory(Intent.CATEGORY_LAUNCHER)
+                launchIntent.setComponent(ComponentName("com.fuulea.venus.g", "com.fuulea.venus.MainActivity"))
+                launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(context, launchIntent,null)
             }) {
                 Row(modifier = Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Filled.PlayArrow, contentDescription = "启动")
@@ -207,14 +213,57 @@ fun MainScreen() {
     }
 }
 
+fun savePreferencesToJson(context: Context, sharedPreferences: SharedPreferences) {
+    val allPreferences = sharedPreferences.all
+    val json = JSONObject()
+    for ((key, value) in allPreferences) {
+        try {
+            json.put(key, value)
+        } catch (e: JSONException) {
+            Log.e("MainScreen", "Error putting preference into JSON", e)
+        }
+    }
+
+    if (json.length() == 0) {
+        Log.w("MainScreen", "No preferences to save to JSON.")
+        return
+    }
+
+    try {
+        val fuEmuDir = File(
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+            "FuEmu"
+        )
+        if (!fuEmuDir.exists()) {
+            if (!fuEmuDir.mkdirs()) {
+                Log.e("MainScreen", "Failed to create directory: ${fuEmuDir.absolutePath}")
+                Toast.makeText(context, "创建目录失败", Toast.LENGTH_LONG).show()
+                return
+            }
+        }
+        val file = File(fuEmuDir, "FuEmuPrefs.json")
+        val fileWriter = FileWriter(file)
+        fileWriter.write(json.toString(4)) // Use 4 for pretty print JSON
+        fileWriter.flush()
+        fileWriter.close()
+        Toast.makeText(context, "数据已保存", Toast.LENGTH_LONG).show()
+    } catch (e: Exception) {
+        Log.e("MainScreen", "Error saving preferences to JSON", e)
+        Toast.makeText(context, "保存数据失败: ${e.message}", Toast.LENGTH_LONG).show()
+    }
+}
+
+
 @Composable
 fun UpdateInfoDialog(releaseInfo: GitHubReleaseInfo, onDismiss: () -> Unit, context: Context) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("发现新版本: ${releaseInfo.tagName}") },
         text = {
-            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                Text(releaseInfo.body.ifEmpty { "暂无更新日志" })
+            SelectionContainer {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Text(releaseInfo.body.ifEmpty { "暂无更新日志" })
+                }
             }
         },
         confirmButton = {
@@ -257,19 +306,20 @@ fun UpdateInfoDialog(releaseInfo: GitHubReleaseInfo, onDismiss: () -> Unit, cont
 
 @Composable
 fun SystemInfoCard(sharedPreferences: SharedPreferences) {
-    var systemNameText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("system_name", "") ?: "")) }
+    var androidVersionText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("android_version", "") ?: "")) }
     var brandText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("brand", "") ?: "")) }
     var deviceInfoText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("device_info", "") ?: "")) }
     var deviceNameText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("device_name", "") ?: "")) }
+    var serialNumberText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("serial_number", "") ?: "")) }
     val context = LocalContext.current
 
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("设备特征", style = MaterialTheme.typography.titleLarge)
             OutlinedTextField(
-                value = systemNameText,
-                onValueChange = { systemNameText = it },
-                label = { Text("系统名称") },
+                value = androidVersionText,
+                onValueChange = { androidVersionText = it },
+                label = { Text("Android版本") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -291,15 +341,23 @@ fun SystemInfoCard(sharedPreferences: SharedPreferences) {
                 label = { Text("设备名称") },
                 modifier = Modifier.fillMaxWidth()
             )
+            OutlinedTextField(
+                value = serialNumberText,
+                onValueChange = { serialNumberText = it },
+                label = { Text("序列号") },
+                modifier = Modifier.fillMaxWidth()
+            )
             Button(
                 onClick = {
                     sharedPreferences.edit {
-                    putString("system_name", systemNameText.text)
+                    putString("android_version", androidVersionText.text)
                     putString("brand", brandText.text)
                     putString("device_info", deviceInfoText.text)
                     putString("device_name", deviceNameText.text)
+                    putString("serial_number", serialNumberText.text)
                 }
-                    Toast.makeText(context, "设备特征已保存", Toast.LENGTH_SHORT).show()
+                    savePreferencesToJson(context, sharedPreferences)
+                    //Toast.makeText(context, "设备特征已保存", Toast.LENGTH_SHORT).show()
                 },
                 modifier = Modifier.align(Alignment.End)
             ) {
@@ -354,7 +412,8 @@ fun GovernanceEnvironmentCard(sharedPreferences: SharedPreferences) {
                     sharedPreferences.edit {
                     putString("governance_environment", selectedOptionText)
                 }
-                    Toast.makeText(context, "管控环境已保存", Toast.LENGTH_SHORT).show()
+                    savePreferencesToJson(context, sharedPreferences)
+                    //Toast.makeText(context, "管控环境已保存", Toast.LENGTH_SHORT).show()
                 },
                 modifier = Modifier.align(Alignment.End)
             ) {
@@ -364,31 +423,45 @@ fun GovernanceEnvironmentCard(sharedPreferences: SharedPreferences) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProjectInfoCard() {
     val context = LocalContext.current
     val githubUrl = "https://github.com/fR0Z863xF/FuuleaEnvEmu/tree/v2"
+    val projectDescription = "FuEmu是一款用于模拟特定环境的工具，旨在帮助开发者进行相关测试和开发。\n\n此项目仅为此目的提供此工具，请在遵守相关规定的情况下使用。\n\n点击卡片前往Github项目页面。"
 
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text("项目信息", style = MaterialTheme.typography.titleLarge, modifier = Modifier.align(Alignment.Start))
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(onClick = {
-                val intent = Intent(Intent.ACTION_VIEW, githubUrl.toUri())
-                try {
-                    context.startActivity(intent)
-                } catch (e: Exception) {
-                    Toast.makeText(context, "无法打开链接: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-            }) {
-                Text("跳转到 GitHub")
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = {
+            val intent = Intent(Intent.ACTION_VIEW, githubUrl.toUri())
+            try {
+                context.startActivity(intent)
+            } catch (e: Exception) {
+                Toast.makeText(context, "无法打开链接: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+//            Icon(
+//                imageVector = Icons.Filled.Info,
+//                contentDescription = "项目信息图标",
+//                modifier = Modifier.size(40.dp)
+//            )
+//            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                //Text("项目信息", style = MaterialTheme.typography.titleLarge)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(projectDescription, style = MaterialTheme.typography.bodyMedium)
+            }
+
+        }
     }
+    Spacer(modifier = Modifier.height(16.dp))
 }
 
 @Preview(showBackground = true)
