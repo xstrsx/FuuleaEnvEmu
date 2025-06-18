@@ -32,7 +32,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "17"
+        jvmTarget = "21"
     }
     buildFeatures {
         compose = true
@@ -40,6 +40,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.core.ktx)
     //implementation(files("libxposed/api-100.aar"))
     compileOnlyApi(libs.xposed.api)
     implementation(libs.androidx.core.ktx)
