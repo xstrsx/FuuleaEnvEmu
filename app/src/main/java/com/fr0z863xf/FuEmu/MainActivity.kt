@@ -16,7 +16,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
@@ -29,7 +28,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.startActivity
 import com.fr0z863xf.FuEmu.ui.theme.FuEmuTheme
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -43,8 +41,7 @@ import androidx.core.content.edit
 import org.json.JSONException
 import java.io.File
 import java.io.FileWriter
-import kotlin.concurrent.write
-import kotlin.io.path.exists
+
 
 data class GitHubAsset(val name: String, val browserDownloadUrl: String)
 data class GitHubReleaseInfo(
