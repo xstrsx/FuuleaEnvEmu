@@ -305,9 +305,29 @@ fun UpdateInfoDialog(releaseInfo: GitHubReleaseInfo, onDismiss: () -> Unit, cont
 fun SystemInfoCard(sharedPreferences: SharedPreferences) {
     var androidVersionText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("android_version", "") ?: "")) }
     var brandText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("brand", "") ?: "")) }
+    var modelText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("model", "") ?: "")) }
+    var productText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("product", "") ?: "")) }
+    var manufacturerText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("manufacturer", "") ?: "")) }
+    var hardwareText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("hardware", "") ?: "")) }
+    var fingerprintText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("fingerprint", "") ?: "")) }
+    var displayText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("display", "") ?: "")) }
+    var boardText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("board", "") ?: "")) }
     var deviceInfoText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("device_info", "") ?: "")) }
     var deviceNameText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("device_name", "") ?: "")) }
     var serialNumberText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("serial_number", "") ?: "")) }
+    var bootloaderText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("bootloader", "") ?: "")) }
+    var hostText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("host", "") ?: "")) }
+    var idText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("id", "") ?: "")) }
+    var tagsText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("tags", "") ?: "")) }
+    var typeText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("type", "") ?: "")) }
+    var userText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("user", "") ?: "")) }
+    var timeText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("time", "") ?: "")) }
+    var codenameText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("codename", "") ?: "")) }
+    var incrementalText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("incremental", "") ?: "")) }
+    var sdkIntText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("sdk_int", "") ?: "")) }
+    var basebandText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("baseband", "") ?: "")) }
+    var kernelVersionText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("kernel_version", "") ?: "")) }
+    var androidIdText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("android_id", "") ?: "")) }
     val context = LocalContext.current
 
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -316,32 +336,152 @@ fun SystemInfoCard(sharedPreferences: SharedPreferences) {
             OutlinedTextField(
                 value = androidVersionText,
                 onValueChange = { androidVersionText = it },
-                label = { Text("Android版本") },
+                label = { Text("Android版本 (RELEASE)") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
                 value = brandText,
                 onValueChange = { brandText = it },
-                label = { Text("品牌") },
+                label = { Text("品牌 (BRAND)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = modelText,
+                onValueChange = { modelText = it },
+                label = { Text("型号 (MODEL)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = productText,
+                onValueChange = { productText = it },
+                label = { Text("产品 (PRODUCT)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = manufacturerText,
+                onValueChange = { manufacturerText = it },
+                label = { Text("制造商 (MANUFACTURER)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = hardwareText,
+                onValueChange = { hardwareText = it },
+                label = { Text("硬件 (HARDWARE)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = fingerprintText,
+                onValueChange = { fingerprintText = it },
+                label = { Text("设备指纹 (FINGERPRINT)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = displayText,
+                onValueChange = { displayText = it },
+                label = { Text("显示 (DISPLAY)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = boardText,
+                onValueChange = { boardText = it },
+                label = { Text("主板 (BOARD)") },
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
                 value = deviceInfoText,
                 onValueChange = { deviceInfoText = it },
-                label = { Text("设备信息") },
+                label = { Text("设备 (DEVICE)") },
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
                 value = deviceNameText,
                 onValueChange = { deviceNameText = it },
-                label = { Text("设备名称") },
+                label = { Text("设备名称 (RNDeviceModule)") },
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
                 value = serialNumberText,
                 onValueChange = { serialNumberText = it },
-                label = { Text("序列号") },
+                label = { Text("序列号 (SERIAL)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = bootloaderText,
+                onValueChange = { bootloaderText = it },
+                label = { Text("引导程序 (BOOTLOADER)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = hostText,
+                onValueChange = { hostText = it },
+                label = { Text("主机 (HOST)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = idText,
+                onValueChange = { idText = it },
+                label = { Text("ID") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = tagsText,
+                onValueChange = { tagsText = it },
+                label = { Text("标签 (TAGS)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = typeText,
+                onValueChange = { typeText = it },
+                label = { Text("类型 (TYPE)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = userText,
+                onValueChange = { userText = it },
+                label = { Text("用户 (USER)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = timeText,
+                onValueChange = { timeText = it },
+                label = { Text("时间 (TIME)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = codenameText,
+                onValueChange = { codenameText = it },
+                label = { Text("代号 (CODENAME)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = incrementalText,
+                onValueChange = { incrementalText = it },
+                label = { Text("增量 (INCREMENTAL)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = sdkIntText,
+                onValueChange = { sdkIntText = it },
+                label = { Text("SDK整数 (SDK_INT和SDK)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = basebandText,
+                onValueChange = { basebandText = it },
+                label = { Text("基带版本 (Baseband)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = kernelVersionText,
+                onValueChange = { kernelVersionText = it },
+                label = { Text("内核版本 (Kernel Version)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = androidIdText,
+                onValueChange = { androidIdText = it },
+                label = { Text("Android ID") },
                 modifier = Modifier.fillMaxWidth()
             )
             Button(
@@ -349,9 +489,32 @@ fun SystemInfoCard(sharedPreferences: SharedPreferences) {
                     sharedPreferences.edit {
                     putString("android_version", androidVersionText.text)
                     putString("brand", brandText.text)
+                    putString("model", modelText.text)
+                    putString("product", productText.text)
+                    putString("manufacturer", manufacturerText.text)
+                    putString("hardware", hardwareText.text)
+                    putString("fingerprint", fingerprintText.text)
+                    putString("display", displayText.text)
+                    putString("board", boardText.text)
                     putString("device_info", deviceInfoText.text)
                     putString("device_name", deviceNameText.text)
                     putString("serial_number", serialNumberText.text)
+                    putString("bootloader", bootloaderText.text)
+                    putString("host", hostText.text)
+                    putString("id", idText.text)
+                    putString(
+                        "tags",
+                        tagsText.text
+                    )
+                    putString("type", typeText.text)
+                    putString("user", userText.text)
+                    putString("time", timeText.text)
+                    putString("codename", codenameText.text)
+                    putString("incremental", incrementalText.text)
+                    putString("sdk_int", sdkIntText.text)
+                    putString("baseband", basebandText.text)
+                    putString("kernel_version", kernelVersionText.text)
+                    putString("android_id", androidIdText.text)
                 }
                     savePreferencesToJson(context, sharedPreferences)
                     //Toast.makeText(context, "设备特征已保存", Toast.LENGTH_SHORT).show()
@@ -431,34 +594,15 @@ fun ProjectInfoCard() {
         modifier = Modifier.fillMaxWidth(),
         onClick = {
             val intent = Intent(Intent.ACTION_VIEW, githubUrl.toUri())
-            try {
-                context.startActivity(intent)
-            } catch (e: Exception) {
-                Toast.makeText(context, "无法打开链接: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+            context.startActivity(intent)
         }
     ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-//            Icon(
-//                imageVector = Icons.Filled.Info,
-//                contentDescription = "项目信息图标",
-//                modifier = Modifier.size(40.dp)
-//            )
-//            Spacer(modifier = Modifier.width(16.dp))
-            Column {
-                //Text("项目信息", style = MaterialTheme.typography.titleLarge)
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(projectDescription, style = MaterialTheme.typography.bodyMedium)
-            }
-
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("关于项目", style = MaterialTheme.typography.titleLarge)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(projectDescription)
         }
     }
-    Spacer(modifier = Modifier.height(16.dp))
 }
 
 @Preview(showBackground = true)

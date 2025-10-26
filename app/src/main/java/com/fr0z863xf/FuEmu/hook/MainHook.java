@@ -12,14 +12,11 @@ import java.util.Objects;
 
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
-import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 public class MainHook implements IXposedHookLoadPackage {
-
-    //private static final XSharedPreferences prefs = new XSharedPreferences("com.fr0z863xf.FuEmu");
 
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable  {
@@ -45,15 +42,76 @@ public class MainHook implements IXposedHookLoadPackage {
                         Toast.makeText((Activity) param.thisObject, "[FuEmu]:模块已加载", Toast.LENGTH_SHORT).show();
                     }
                 });
-                //关键hook，修改版本和品牌。直接修改常量更方便，无需对具体的获取函数进行hook
-                //Class<?> buildVersionClass = XposedHelpers.findClass("android.os.Build$VERSION", finalClassLoader);
+
+                // 关键hook，修改版本和品牌。直接修改常量更方便，无需对具体的获取函数进行hook
                 XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build$VERSION", finalClassLoader), "RELEASE", prefs.getString("android_version", Build.VERSION.RELEASE));
                 XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"BRAND",prefs.getString("brand", Build.BRAND));
+                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"MODEL",prefs.getString("model", Build.MODEL));
+                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"PRODUCT",prefs.getString("product", Build.PRODUCT));
+                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"MANUFACTURER",prefs.getString("manufacturer", Build.MANUFACTURER));
+                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"HARDWARE",prefs.getString("hardware", Build.HARDWARE));
+                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"FINGERPRINT",prefs.getString("fingerprint", Build.FINGERPRINT));
+                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"DISPLAY",prefs.getString("display", Build.DISPLAY));
+                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"BOARD",prefs.getString("board", Build.BOARD));
                 XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"DEVICE",prefs.getString("device_info", Build.DEVICE));
                 XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"SERIAL",prefs.getString("serial_number", Build.SERIAL));
+                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"BOOTLOADER",prefs.getString("bootloader", Build.BOOTLOADER));
+                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"HOST",prefs.getString("host", Build.HOST));
+                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"ID",prefs.getString("id", Build.ID));
+                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"TAGS",prefs.getString("tags", Build.TAGS));
+                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"TYPE",prefs.getString("type", Build.TYPE));
+                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"USER",prefs.getString("user", Build.USER));
+                XposedHelpers.setStaticLongField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"TIME", Long.parseLong(prefs.getString("time", String.valueOf(Build.TIME))));
+                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build$VERSION", finalClassLoader),"CODENAME",prefs.getString("codename", Build.VERSION.CODENAME));
+                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build$VERSION", finalClassLoader),"INCREMENTAL",prefs.getString("incremental", Build.VERSION.INCREMENTAL));
+                XposedHelpers.setStaticIntField(XposedHelpers.findClass("android.os.Build$VERSION", finalClassLoader),"SDK_INT", Integer.parseInt(prefs.getString("sdk_int", String.valueOf(Build.VERSION.SDK_INT))));
+                XposedHelpers.setStaticIntField(XposedHelpers.findClass("android.os.Build$VERSION", finalClassLoader),"SDK", Integer.parseInt(prefs.getString("sdk_int", String.valueOf(Build.VERSION.SDK_INT))));
 
-                //关键hook，修改设备名称、管控环境、设备型号
+                // Hook for Baseband version (基带版本)
+                XposedHelpers.findAndHookMethod("android.os.Build", finalClassLoader, "getRadioVersion", new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        super.afterHookedMethod(param);
+                        String baseband = prefs.getString("baseband", null);
+                        if (baseband != null) {
+                            param.setResult(baseband);
+                            XposedBridge.log("[FuEmu] Hooked getRadioVersion to: " + baseband);
+                        }
+                    }
+                });
 
+                // Hook for Kernel version (内核版本)
+                XposedHelpers.findAndHookMethod("java.lang.System", finalClassLoader, "getProperty", String.class, new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        super.afterHookedMethod(param);
+                        if (param.args[0] != null && param.args[0].equals("os.version")) {
+                            String kernelVersion = prefs.getString("kernel_version", null);
+                            if (kernelVersion != null) {
+                                param.setResult(kernelVersion);
+                                XposedBridge.log("[FuEmu] Hooked os.version to: " + kernelVersion);
+                            }
+                        }
+                    }
+                });
+
+                // Hook for Android ID
+                XposedHelpers.findAndHookMethod("android.provider.Settings.Secure", finalClassLoader, "getString", ContentResolver.class, String.class, new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        super.afterHookedMethod(param);
+                        if (param.args[1] != null && param.args[1].equals("android_id")) {
+                            String androidId = prefs.getString("android_id", null);
+                            if (androidId != null) {
+                                param.setResult(androidId);
+                                XposedBridge.log("[FuEmu] Hooked android_id to: " + androidId);
+                            }
+                        }
+                    }
+                });
+
+
+                // 关键hook，修改设备名称、管控环境、设备型号
                 XposedHelpers.findAndHookMethod("com.learnium.RNDeviceInfo.RNDeviceModule",finalClassLoader,"getDeviceNameSync", new XC_MethodHook() {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
