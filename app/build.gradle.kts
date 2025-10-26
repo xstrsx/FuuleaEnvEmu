@@ -10,10 +10,10 @@ android {
 
     defaultConfig {
         applicationId = "com.fr0z863xf.FuEmu"
-        minSdk = 29
+        minSdk = 31
         targetSdk = 36
-        versionCode = 2
-        versionName = "2.0.1"
+        versionCode = 3
+        versionName = "2.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
