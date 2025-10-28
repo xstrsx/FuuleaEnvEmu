@@ -65,7 +65,7 @@ public class MainHook implements IXposedHookLoadPackage {
                 XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build$VERSION", finalClassLoader),"CODENAME",prefs.getString("codename", Build.VERSION.CODENAME));
                 XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build$VERSION", finalClassLoader),"INCREMENTAL",prefs.getString("incremental", Build.VERSION.INCREMENTAL));
                 XposedHelpers.setStaticIntField(XposedHelpers.findClass("android.os.Build$VERSION", finalClassLoader),"SDK_INT", Integer.parseInt(prefs.getString("sdk_int", String.valueOf(Build.VERSION.SDK_INT))));
-                XposedHelpers.setStaticIntField(XposedHelpers.findClass("android.os.Build$VERSION", finalClassLoader),"SDK", Integer.parseInt(prefs.getString("sdk_int", String.valueOf(Build.VERSION.SDK_INT))));
+                //XposedHelpers.setStaticIntField(XposedHelpers.findClass("android.os.Build$VERSION", finalClassLoader),"SDK", Integer.parseInt(prefs.getString("sdk_int", String.valueOf(Build.VERSION.SDK_INT))));
 
                 // Hook for Baseband version (基带版本)
                 XposedHelpers.findAndHookMethod("android.os.Build", finalClassLoader, "getRadioVersion", new XC_MethodHook() {
