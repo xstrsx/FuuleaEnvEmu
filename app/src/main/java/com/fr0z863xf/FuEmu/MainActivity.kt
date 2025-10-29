@@ -460,12 +460,12 @@ fun SystemInfoCard(sharedPreferences: SharedPreferences) {
                 label = { Text("增量 (INCREMENTAL)") },
                 modifier = Modifier.fillMaxWidth()
             )
-            OutlinedTextField(
-                value = sdkIntText,
-                onValueChange = { sdkIntText = it },
-                label = { Text("SDK整数 (SDK_INT和SDK)") },
-                modifier = Modifier.fillMaxWidth()
-            )
+//            OutlinedTextField(
+//                value = sdkIntText,
+//                onValueChange = { sdkIntText = it },
+//                label = { Text("SDK整数 (SDK_INT和SDK)") },
+//                modifier = Modifier.fillMaxWidth()
+//            )
             OutlinedTextField(
                 value = basebandText,
                 onValueChange = { basebandText = it },
@@ -511,7 +511,7 @@ fun SystemInfoCard(sharedPreferences: SharedPreferences) {
                     putString("time", timeText.text)
                     putString("codename", codenameText.text)
                     putString("incremental", incrementalText.text)
-                    putString("sdk_int", sdkIntText.text)
+//                    putString("sdk_int", sdkIntText.text)
                     putString("baseband", basebandText.text)
                     putString("kernel_version", kernelVersionText.text)
                     putString("android_id", androidIdText.text)

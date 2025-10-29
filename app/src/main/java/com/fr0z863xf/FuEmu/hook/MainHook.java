@@ -1,17 +1,41 @@
 package com.fr0z863xf.FuEmu.hook;
 
+import static de.robv.android.xposed.XC_MethodReplacement.DO_NOTHING;
+
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Application;
 import android.content.ContentResolver;
+import android.net.http.X509TrustManagerExtensions;
 import android.os.Build;
 import android.os.Bundle;
 import android.widget.Toast;
 
+import org.apache.http.conn.scheme.HostNameResolver;
+
+import java.net.Socket;
+import java.security.KeyStore;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLParameters;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509ExtendedTrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
+import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
@@ -44,6 +68,7 @@ public class MainHook implements IXposedHookLoadPackage {
                 });
 
                 // 关键hook，修改版本和品牌。直接修改常量更方便，无需对具体的获取函数进行hook
+                // 实际上没几个是真正需要的:)
                 XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build$VERSION", finalClassLoader), "RELEASE", prefs.getString("android_version", Build.VERSION.RELEASE));
                 XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"BRAND",prefs.getString("brand", Build.BRAND));
                 XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"MODEL",prefs.getString("model", Build.MODEL));
@@ -64,7 +89,7 @@ public class MainHook implements IXposedHookLoadPackage {
                 XposedHelpers.setStaticLongField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"TIME", Long.parseLong(prefs.getString("time", String.valueOf(Build.TIME))));
                 XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build$VERSION", finalClassLoader),"CODENAME",prefs.getString("codename", Build.VERSION.CODENAME));
                 XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build$VERSION", finalClassLoader),"INCREMENTAL",prefs.getString("incremental", Build.VERSION.INCREMENTAL));
-                XposedHelpers.setStaticIntField(XposedHelpers.findClass("android.os.Build$VERSION", finalClassLoader),"SDK_INT", Integer.parseInt(prefs.getString("sdk_int", String.valueOf(Build.VERSION.SDK_INT))));
+                //XposedHelpers.setStaticIntField(XposedHelpers.findClass("android.os.Build$VERSION", finalClassLoader),"SDK_INT", Integer.parseInt(prefs.getString("sdk_int", String.valueOf(Build.VERSION.SDK_INT))));
                 //XposedHelpers.setStaticIntField(XposedHelpers.findClass("android.os.Build$VERSION", finalClassLoader),"SDK", Integer.parseInt(prefs.getString("sdk_int", String.valueOf(Build.VERSION.SDK_INT))));
 
                 // Hook for Baseband version (基带版本)
@@ -180,6 +205,190 @@ public class MainHook implements IXposedHookLoadPackage {
                     }
                 });
 
+                //绕过证书验证，方便抓包
+//                try {
+//                    XposedHelpers.findAndHookMethod("javax.net.ssl.X509TrustManager",finalClassLoader, "checkServerTrusted", java.security.cert.X509Certificate[].class, String.class, new XC_MethodHook() {
+//                        @Override
+//                        protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+//                            XposedBridge.log("[FuEmu][Util] Universal TrustManager->checkServerTrusted called. Bypassing check.");
+//                            param.setResult(null);
+//                        }
+//                    });
+//                    XposedBridge.log("[FuEmu][Util] Universal javax.net.ssl.X509TrustManager->checkServerTrusted hooked.");
+//                } catch (Throwable e) {
+//                    XposedBridge.log("[FuEmu][Util] Error hooking universal javax.net.ssl.X509TrustManager: " + e.getMessage());
+//                }
+
+                try {
+                    XposedHelpers.findAndHookMethod("javax.net.ssl.SSLContext", finalClassLoader, "init", KeyManager[].class, TrustManager[].class, SecureRandom.class, new XC_MethodHook() {
+                                @Override
+                                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                                    XposedBridge.log("[FuEmu][Util][SSLContext] SSLContext.init(KeyManager[], TrustManager[], SecureRandom) called.");
+                                    param.args[1] = new TrustManager[]{ new NBTrustManager() };
+                                }
+                            }
+                    );
+                    XposedBridge.log("[FuEmu][Util] SSLContext hooks have been set up successfully.");
+                } catch (Throwable e) {
+                    XposedBridge.log("[FuEmu][Util] Error hooking SSLContext.init: " + e.getMessage());
+                }
+
+                try {
+                    XposedHelpers.findAndHookConstructor(SSLSocketFactory.class, String.class, KeyStore.class, String.class, KeyStore.class,SecureRandom.class, new XC_MethodHook() {});
+                } catch (Throwable e) {
+
+                }
+
+
+                try {
+                    XposedHelpers.findAndHookMethod("com.android.org.conscrypt.TrustManagerImpl", finalClassLoader, "checkServerTrusted",X509Certificate[].class, String.class, String.class, new XC_MethodReplacement() {
+                        @Override
+                        protected Object replaceHookedMethod(MethodHookParam param) throws Throwable {
+                            XposedBridge.log("[FuEmu][Util] Conscrypt TrustManagerImpl->checkServerTrusted(Cert,String,String) called. Bypassing check.");
+                            return new ArrayList<X509Certificate>();
+                        }
+                    });
+                    XposedBridge.log("[FuEmu][Util] Conscrypt TrustManagerImpl->checkServerTrusted(Cert,String,String) hooked.");
+                } catch (Throwable e) {
+                    XposedBridge.log("[FuEmu][Util] Error hooking Conscrypt TrustManagerImpl->checkServerTrusted(Cert,String,String): " + e.getMessage());
+                }
+
+                try {
+                    XposedHelpers.findAndHookMethod("com.android.org.conscrypt.TrustManagerImpl", finalClassLoader, "checkServerTrusted", X509Certificate[].class, String.class, new XC_MethodReplacement() {
+                        @Override
+                        protected Object replaceHookedMethod(MethodHookParam param) throws Throwable {
+                            XposedBridge.log("[FuEmu][Util] Conscrypt TrustManagerImpl->checkServerTrusted(Cert[],String) called. Bypassing check.");
+                            return null;
+                        }
+                    });
+                    XposedBridge.log("[FuEmu][Util] Conscrypt TrustManagerImpl->checkServerTrusted(Cert,String) hooked.");
+                } catch (Throwable e) {
+                    XposedBridge.log("[FuEmu][Util] Error hooking Conscrypt TrustManagerImpl->checkServerTrusted(Cert,String): " + e.getMessage());
+                }
+
+                try {
+                    XposedHelpers.findAndHookMethod("com.android.org.conscrypt.TrustManagerImpl", finalClassLoader, "checkServerTrusted", X509Certificate[].class, String.class, SSLSession.class, new XC_MethodReplacement() {
+                        @Override
+                        protected Object replaceHookedMethod(MethodHookParam param) throws Throwable {
+                            XposedBridge.log("[FuEmu][Util] Conscrypt TrustManagerImpl->checkServerTrusted(Cert[],String,SSLSession) called. Bypassing check.");
+                            return new ArrayList<X509Certificate>();
+                        }
+                    });
+                    XposedBridge.log("[FuEmu][Util] Conscrypt TrustManagerImpl->checkServerTrusted(Cert,String,SSLSession) hooked.");
+                } catch (Throwable e) {
+                    XposedBridge.log("[FuEmu][Util] Error hooking Conscrypt TrustManagerImpl->checkServerTrusted(Cert,String,SSLSession): " + e.getMessage());
+                }
+
+                try {
+                    XposedHelpers.findAndHookMethod("com.android.org.conscrypt.TrustManagerImpl", finalClassLoader, "checkTrusted", X509Certificate[].class, String.class, SSLSession.class, SSLParameters.class, boolean.class, new XC_MethodReplacement() {
+                        @Override
+                        protected Object replaceHookedMethod(MethodHookParam param) throws Throwable {
+                            XposedBridge.log("[FuEmu][Util] Conscrypt TrustManagerImpl->checkTrusted(Cert[],String,SSLSession,SSLParameters,boolean) called. Bypassing check.");
+                            return new ArrayList<X509Certificate>();
+                        }
+                    });
+                    XposedBridge.log("[FuEmu][Util] Conscrypt TrustManagerImpl->checkTrusted(Cert,String,SSLSession...) hooked.");
+                } catch (Throwable e) {
+                    XposedBridge.log("[FuEmu][Util] Error hooking Conscrypt TrustManagerImpl->checkTrusted(Cert,String,SSLSession...): " + e.getMessage());
+                }
+
+                try {
+                    XposedHelpers.findAndHookMethod("com.android.org.conscrypt.TrustManagerImpl", finalClassLoader, "checkTrusted", X509Certificate[].class, byte[].class, byte[].class, String.class, String.class, boolean.class, new XC_MethodReplacement() {
+                        @Override
+                        protected Object replaceHookedMethod(MethodHookParam param) throws Throwable {
+                            XposedBridge.log("[FuEmu][Util] Conscrypt TrustManagerImpl->checkTrusted(Cert,byte,byte,String,String,boolean) called. Bypassing check.");
+                            return new ArrayList<X509Certificate>();
+                        }
+                    });
+                    XposedBridge.log("[FuEmu][Util] Conscrypt TrustManagerImpl->checkTrusted(Cert,byte,byte...) hooked.");
+                } catch (Throwable e) {
+                    XposedBridge.log("[FuEmu][Util] Error hooking Conscrypt TrustManagerImpl->checkTrusted(Cert,byte,byte...): " + e.getMessage());
+                }
+
+
+
+
+                XposedHelpers.findAndHookMethod(X509TrustManagerExtensions.class, "checkServerTrusted", X509Certificate[].class, String.class, String.class, new XC_MethodReplacement() {
+                    @Override
+                    protected Object replaceHookedMethod(MethodHookParam param) throws Throwable {
+                        XposedBridge.log("[FuEmu][Util]X509TrustManagerExtensions->checkServerTrusted called");
+                        return new ArrayList<X509Certificate>();
+                    }
+                });
+
+
+                XposedHelpers.findAndHookMethod("android.security.net.config.NetworkSecurityTrustManager", finalClassLoader, "checkPins", List.class, DO_NOTHING);
+
+
+
+                try {
+                    XposedHelpers.findAndHookMethod("okhttp3.CertificatePinner", finalClassLoader, "check$okhttp", String.class, List.class, new XC_MethodReplacement() {
+                        @Override
+                        protected Object replaceHookedMethod(MethodHookParam param) throws Throwable {
+                            XposedBridge.log("[FuEmu][Util]okhttp3.CertificatePinner->check$okhttp(String,List) called");
+                            return null;
+                        }
+                    });
+                    XposedBridge.log("[FuEmu][Util]okhttp3.CertificatePinner->check$okhttp(String,List) hooked");
+                } catch(Throwable e) {
+                    XposedBridge.log("[FuEmu][Util]okhttp3.CertificatePinner->check$okhttp(String,List) not found");
+                }
+
+                try {
+                    XposedHelpers.findAndHookMethod("okhttp3.CertificatePinner",finalClassLoader,"check$okhttp", String.class, "kotlin.jvm.functions.Function0", new XC_MethodReplacement() {
+                        @Override
+                        protected Object replaceHookedMethod(MethodHookParam param) throws Throwable {
+                            XposedBridge.log("[FuEmu][Util]okhttp3.CertificatePinner->check$okhttp(String,Function0) called");
+                            return null;
+                        }
+                    });
+                    XposedBridge.log("[FuEmu][Util]okhttp3.CertificatePinner->check$okhttp(String,Function0) hooked");
+                } catch(Throwable e) {
+                    XposedBridge.log("[FuEmu][Util]okhttp3.CertificatePinner->check$okhttp(String,Function0) not found");
+                }
+
+                try {
+                    XposedHelpers.findAndHookMethod("okhttp3.CertificatePinner", finalClassLoader, "check", String.class, List.class, new XC_MethodReplacement() {
+                        @Override
+                        protected Object replaceHookedMethod(MethodHookParam param) throws Throwable {
+                            XposedBridge.log("[FuEmu][Util]okhttp3.CertificatePinner->check(String,List) called");
+                            return null;
+                        }
+                    });
+                    XposedBridge.log("[FuEmu][Util]okhttp3.CertificatePinner->check(String,List) hooked");
+                } catch(Throwable e) {
+                    XposedBridge.log("[FuEmu][Util]okhttp3.CertificatePinner->check(String,List) not found");
+                }
+
+                try {
+                    XposedHelpers.findAndHookMethod("okhttp3.internal.tls.OkHostnameVerifier", finalClassLoader, "verify", String.class, X509Certificate.class, new XC_MethodReplacement() {
+                        @Override
+                        protected Object replaceHookedMethod(MethodHookParam methodHookParam) throws Throwable {
+                            XposedBridge.log("[FuEmu][Util]okhttp3.internal.tls.OkHostnameVerifier->verify(String,X509Certificate) called");
+                            return true;
+                        }
+                    });
+                    XposedBridge.log("[FuEmu][Util]okhttp3.internal.tls.OkHostnameVerifier->verify(String,X509Certificate) hooked");
+                } catch(Throwable e) {
+                    XposedBridge.log("[FuEmu][Util]okhttp3.internal.tls.OkHostnameVerifier->verify(String,X509Certificate) not found");
+                }
+
+                try {
+                    XposedHelpers.findAndHookMethod("okhttp3.internal.tls.OkHostnameVerifier", finalClassLoader, "verify", String.class, SSLSession.class, new XC_MethodReplacement() {
+                        @Override
+                        protected Object replaceHookedMethod(MethodHookParam methodHookParam) throws Throwable {
+                            XposedBridge.log("[FuEmu][Util]okhttp3.internal.tls.OkHostnameVerifier->verify(String,SSLSession) called");
+                            return true;
+                        }
+                    });
+                    XposedBridge.log("[FuEmu][Util]okhttp3.internal.tls.OkHostnameVerifier->verify(String,SSLSession) hooked");
+                } catch (Throwable e) {
+                    XposedBridge.log("[FuEmu][Util]okhttp3.internal.tls.OkHostnameVerifier->verify(String,SSLSession) not found");
+                }
+
+
+
+
             }
         });
     }
@@ -193,5 +402,43 @@ public class MainHook implements IXposedHookLoadPackage {
         Application mApplication = (Application) XposedHelpers.getObjectField(loadedApkInfo, "mApplication");
         resultClassloader = mApplication.getClassLoader();
         return resultClassloader;
+    }
+
+
+    private class NBTrustManager extends X509ExtendedTrustManager {
+        @Override
+        public void checkClientTrusted(X509Certificate[] chain, String authType, Socket socket) throws CertificateException {
+            XposedBridge.log("[FuEmu][Util]NBTrustManager->checkClientTrusted called");
+        }
+
+        @Override
+        public void checkServerTrusted(X509Certificate[] chain, String authType, Socket socket) throws CertificateException {
+            XposedBridge.log("[FuEmu][Util]NBTrustManager->checkServerTrusted called");
+        }
+
+        @Override
+        public void checkClientTrusted(X509Certificate[] chain, String authType, SSLEngine engine) throws CertificateException {
+            XposedBridge.log("[FuEmu][Util]NBTrustManager->checkClientTrusted called");
+        }
+
+        @Override
+        public void checkServerTrusted(X509Certificate[] chain, String authType, SSLEngine engine) throws CertificateException {
+            XposedBridge.log("[FuEmu][Util]NBTrustManager->checkServerTrusted called");
+        }
+
+        @Override
+        public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+            XposedBridge.log("[FuEmu][Util]NBTrustManager->checkClientTrusted called");
+        }
+
+        @Override
+        public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+            XposedBridge.log("[FuEmu][Util]NBTrustManager->checkServerTrusted called");
+        }
+
+        @Override
+        public X509Certificate[] getAcceptedIssuers() {
+            return new X509Certificate[0];
+        }
     }
 }
