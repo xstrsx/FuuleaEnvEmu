@@ -12,8 +12,8 @@ android {
         applicationId = "com.fr0z863xf.FuEmu"
         minSdk = 31
         targetSdk = 36
-        versionCode = 3
-        versionName = "2.0.2"
+        versionCode = 4
+        versionName = "2.0.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
