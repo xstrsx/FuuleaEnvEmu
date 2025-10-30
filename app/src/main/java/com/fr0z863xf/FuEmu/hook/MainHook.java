@@ -5,6 +5,7 @@ import static de.robv.android.xposed.XC_MethodReplacement.DO_NOTHING;
 import android.app.Activity;
 import android.app.Application;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.net.http.X509TrustManagerExtensions;
 import android.os.Build;
 import android.os.Bundle;
@@ -389,6 +390,14 @@ public class MainHook implements IXposedHookLoadPackage {
                         }
                     });
                     XposedBridge.log("[FuEmu][Util]com.fuulea.venus.reactNative.RNHost->getUseDeveloperSupport() set to true");
+                    //此项为rn debug，需要悬浮窗权限
+                    XposedHelpers.findAndHookMethod("android.provider.Settings", finalClassLoader, "canDrawOverlays", Context.class, new XC_MethodHook() {
+                        @Override
+                        protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                            XposedBridge.log("[FuEmu][Util]android.provider.Settings->canDrawOverlays() called, permission granted");
+                            param.setResult(true);
+                        }
+                    });
                 }
 
 
