@@ -197,6 +197,7 @@ fun MainScreen() {
         ) {
             SystemInfoCard(sharedPreferences)
             GovernanceEnvironmentCard(sharedPreferences)
+            UtilHooksCard(sharedPreferences)
             ProjectInfoCard()
         }
     }
@@ -315,16 +316,16 @@ fun SystemInfoCard(sharedPreferences: SharedPreferences) {
     var deviceInfoText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("device_info", "") ?: "")) }
     var deviceNameText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("device_name", "") ?: "")) }
     var serialNumberText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("serial_number", "") ?: "")) }
-    var bootloaderText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("bootloader", "") ?: "")) }
-    var hostText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("host", "") ?: "")) }
-    var idText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("id", "") ?: "")) }
-    var tagsText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("tags", "") ?: "")) }
-    var typeText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("type", "") ?: "")) }
-    var userText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("user", "") ?: "")) }
-    var timeText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("time", "") ?: "")) }
-    var codenameText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("codename", "") ?: "")) }
-    var incrementalText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("incremental", "") ?: "")) }
-    var sdkIntText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("sdk_int", "") ?: "")) }
+//    var bootloaderText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("bootloader", "") ?: "")) }
+//    var hostText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("host", "") ?: "")) }
+//    var idText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("id", "") ?: "")) }
+//    var tagsText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("tags", "") ?: "")) }
+//    var typeText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("type", "") ?: "")) }
+//    var userText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("user", "") ?: "")) }
+//    var timeText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("time", "") ?: "")) }
+//    var codenameText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("codename", "") ?: "")) }
+//    var incrementalText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("incremental", "") ?: "")) }
+    //var sdkIntText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("sdk_int", "") ?: "")) }
     var basebandText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("baseband", "") ?: "")) }
     var kernelVersionText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("kernel_version", "") ?: "")) }
     var androidIdText by remember { mutableStateOf(TextFieldValue(sharedPreferences.getString("android_id", "") ?: "")) }
@@ -406,60 +407,60 @@ fun SystemInfoCard(sharedPreferences: SharedPreferences) {
                 label = { Text("序列号 (SERIAL)") },
                 modifier = Modifier.fillMaxWidth()
             )
-            OutlinedTextField(
-                value = bootloaderText,
-                onValueChange = { bootloaderText = it },
-                label = { Text("引导程序 (BOOTLOADER)") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = hostText,
-                onValueChange = { hostText = it },
-                label = { Text("主机 (HOST)") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = idText,
-                onValueChange = { idText = it },
-                label = { Text("ID") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = tagsText,
-                onValueChange = { tagsText = it },
-                label = { Text("标签 (TAGS)") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = typeText,
-                onValueChange = { typeText = it },
-                label = { Text("类型 (TYPE)") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = userText,
-                onValueChange = { userText = it },
-                label = { Text("用户 (USER)") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = timeText,
-                onValueChange = { timeText = it },
-                label = { Text("时间 (TIME)") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = codenameText,
-                onValueChange = { codenameText = it },
-                label = { Text("代号 (CODENAME)") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = incrementalText,
-                onValueChange = { incrementalText = it },
-                label = { Text("增量 (INCREMENTAL)") },
-                modifier = Modifier.fillMaxWidth()
-            )
+//            OutlinedTextField(
+//                value = bootloaderText,
+//                onValueChange = { bootloaderText = it },
+//                label = { Text("引导程序 (BOOTLOADER)") },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//            OutlinedTextField(
+//                value = hostText,
+//                onValueChange = { hostText = it },
+//                label = { Text("主机 (HOST)") },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//            OutlinedTextField(
+//                value = idText,
+//                onValueChange = { idText = it },
+//                label = { Text("ID") },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//            OutlinedTextField(
+//                value = tagsText,
+//                onValueChange = { tagsText = it },
+//                label = { Text("标签 (TAGS)") },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//            OutlinedTextField(
+//                value = typeText,
+//                onValueChange = { typeText = it },
+//                label = { Text("类型 (TYPE)") },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//            OutlinedTextField(
+//                value = userText,
+//                onValueChange = { userText = it },
+//                label = { Text("用户 (USER)") },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//            OutlinedTextField(
+//                value = timeText,
+//                onValueChange = { timeText = it },
+//                label = { Text("时间 (TIME)") },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//            OutlinedTextField(
+//                value = codenameText,
+//                onValueChange = { codenameText = it },
+//                label = { Text("代号 (CODENAME)") },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//            OutlinedTextField(
+//                value = incrementalText,
+//                onValueChange = { incrementalText = it },
+//                label = { Text("增量 (INCREMENTAL)") },
+//                modifier = Modifier.fillMaxWidth()
+//            )
 //            OutlinedTextField(
 //                value = sdkIntText,
 //                onValueChange = { sdkIntText = it },
@@ -574,6 +575,63 @@ fun GovernanceEnvironmentCard(sharedPreferences: SharedPreferences) {
                 }
                     savePreferencesToJson(context, sharedPreferences)
                     //Toast.makeText(context, "管控环境已保存", Toast.LENGTH_SHORT).show()
+                },
+                modifier = Modifier.align(Alignment.End)
+            ) {
+                Text("保存")
+            }
+        }
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun UtilHooksCard(sharedPreferences: SharedPreferences) {
+    val context = LocalContext.current
+    var useDeveloperSupport by remember { mutableStateOf(sharedPreferences.getBoolean("utils_set_UseDeveloperSupport_true", false)) }
+    var enableWebviewDebugging by remember { mutableStateOf(sharedPreferences.getBoolean("utils_enableWebviewDebugging", false)) }
+    var isWifiProxy by remember { mutableStateOf(sharedPreferences.getBoolean("utils_set_isWifiProxy_false", false)) }
+
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("其他功能", style = MaterialTheme.typography.titleLarge)
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("getUseDeveloperSupport->true")
+                Spacer(Modifier.weight(1f))
+                Switch(
+                    checked = useDeveloperSupport,
+                    onCheckedChange = { useDeveloperSupport = it }
+                )
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("enableWebviewDebugging->true")
+                Spacer(Modifier.weight(1f))
+                Switch(
+                    checked = enableWebviewDebugging,
+                    onCheckedChange = { enableWebviewDebugging = it },
+                )
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("移除代理检测")
+                Spacer(Modifier.weight(1f))
+                Switch(
+                    checked = isWifiProxy,
+                    onCheckedChange = { isWifiProxy = it }
+                )
+            }
+
+
+            Button(
+                onClick = {
+                    sharedPreferences.edit {
+                        putBoolean("utils_set_UseDeveloperSupport_true", useDeveloperSupport)
+                            .putBoolean("utils_enableWebviewDebugging", enableWebviewDebugging)
+                            .putBoolean("utils_set_isWifiProxy_false", isWifiProxy)
+                    }
+                    savePreferencesToJson(context, sharedPreferences)
                 },
                 modifier = Modifier.align(Alignment.End)
             ) {

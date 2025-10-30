@@ -387,6 +387,37 @@ public class MainHook implements IXposedHookLoadPackage {
                 }
 
 
+                if(prefs.getBoolean("utils_set_UseDeveloperSupport_true", false)) {
+                    XposedHelpers.findAndHookMethod("com.fuulea.venus.reactNative.RNHost", finalClassLoader, "getUseDeveloperSupport", new XC_MethodReplacement() {
+                        @Override
+                        protected Object replaceHookedMethod(MethodHookParam param) throws Throwable {
+                            return true;
+                        }
+                    });
+                    XposedBridge.log("[FuEmu][Util]com.fuulea.venus.reactNative.RNHost->getUseDeveloperSupport() set to true");
+                }
+
+
+                if(prefs.getBoolean("utils_enableWebviewDebugging", false)) {
+                    XposedHelpers.findAndHookMethod("com.fuulea.venus.reactNative.packages.NativeAbilityModule", finalClassLoader, "enableWebviewDebugging",  new XC_MethodReplacement() {
+                        @Override
+                        protected Object replaceHookedMethod(MethodHookParam param) throws Throwable {
+                            return true;
+                        }
+                    });
+                }
+
+
+                if(prefs.getBoolean("utils_set_isWifiProxy_false", false)) {
+                    XposedHelpers.findAndHookMethod("com.fuulea.venus.reactNative.packages.NativeAbilityModule", finalClassLoader, "isWifiProxy", "com.facebook.react.bridge.Promise", new XC_MethodReplacement() {
+                        @Override
+                        protected Object replaceHookedMethod(MethodHookParam param) throws Throwable {
+                            XposedHelpers.callMethod(param.args[0], "resolve", false);
+                            return null;
+                        }
+                    });
+                }
+
 
 
             }
