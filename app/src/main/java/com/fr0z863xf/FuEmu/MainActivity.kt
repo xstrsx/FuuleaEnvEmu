@@ -499,18 +499,18 @@ fun SystemInfoCard(sharedPreferences: SharedPreferences) {
                     putString("device_info", deviceInfoText.text)
                     putString("device_name", deviceNameText.text)
                     putString("serial_number", serialNumberText.text)
-                    putString("bootloader", bootloaderText.text)
-                    putString("host", hostText.text)
-                    putString("id", idText.text)
-                    putString(
-                        "tags",
-                        tagsText.text
-                    )
-                    putString("type", typeText.text)
-                    putString("user", userText.text)
-                    putString("time", timeText.text)
-                    putString("codename", codenameText.text)
-                    putString("incremental", incrementalText.text)
+//                    putString("bootloader", bootloaderText.text)
+//                    putString("host", hostText.text)
+//                    putString("id", idText.text)
+//                    putString(
+//                        "tags",
+//                        tagsText.text
+//                    )
+//                    putString("type", typeText.text)
+//                    putString("user", userText.text)
+//                    putString("time", timeText.text)
+//                    putString("codename", codenameText.text)
+//                    putString("incremental", incrementalText.text)
 //                    putString("sdk_int", sdkIntText.text)
                     putString("baseband", basebandText.text)
                     putString("kernel_version", kernelVersionText.text)

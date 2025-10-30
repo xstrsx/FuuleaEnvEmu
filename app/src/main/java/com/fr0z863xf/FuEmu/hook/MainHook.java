@@ -80,15 +80,15 @@ public class MainHook implements IXposedHookLoadPackage {
                 XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"BOARD",prefs.getString("board", Build.BOARD));
                 XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"DEVICE",prefs.getString("device_info", Build.DEVICE));
                 XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"SERIAL",prefs.getString("serial_number", Build.SERIAL));
-                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"BOOTLOADER",prefs.getString("bootloader", Build.BOOTLOADER));
-                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"HOST",prefs.getString("host", Build.HOST));
-                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"ID",prefs.getString("id", Build.ID));
-                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"TAGS",prefs.getString("tags", Build.TAGS));
-                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"TYPE",prefs.getString("type", Build.TYPE));
-                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"USER",prefs.getString("user", Build.USER));
-                XposedHelpers.setStaticLongField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"TIME", Long.parseLong(prefs.getString("time", String.valueOf(Build.TIME))));
-                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build$VERSION", finalClassLoader),"CODENAME",prefs.getString("codename", Build.VERSION.CODENAME));
-                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build$VERSION", finalClassLoader),"INCREMENTAL",prefs.getString("incremental", Build.VERSION.INCREMENTAL));
+                //XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"BOOTLOADER",prefs.getString("bootloader", Build.BOOTLOADER));
+                //XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"HOST",prefs.getString("host", Build.HOST));
+                //XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"ID",prefs.getString("id", Build.ID));
+                //XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"TAGS",prefs.getString("tags", Build.TAGS));
+                //XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"TYPE",prefs.getString("type", Build.TYPE));
+                //XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"USER",prefs.getString("user", Build.USER));
+                //XposedHelpers.setStaticLongField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"TIME", Long.parseLong(prefs.getString("time", String.valueOf(Build.TIME))));
+                //XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build$VERSION", finalClassLoader),"CODENAME",prefs.getString("codename", Build.VERSION.CODENAME));
+                //XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build$VERSION", finalClassLoader),"INCREMENTAL",prefs.getString("incremental", Build.VERSION.INCREMENTAL));
                 //XposedHelpers.setStaticIntField(XposedHelpers.findClass("android.os.Build$VERSION", finalClassLoader),"SDK_INT", Integer.parseInt(prefs.getString("sdk_int", String.valueOf(Build.VERSION.SDK_INT))));
                 //XposedHelpers.setStaticIntField(XposedHelpers.findClass("android.os.Build$VERSION", finalClassLoader),"SDK", Integer.parseInt(prefs.getString("sdk_int", String.valueOf(Build.VERSION.SDK_INT))));
 
