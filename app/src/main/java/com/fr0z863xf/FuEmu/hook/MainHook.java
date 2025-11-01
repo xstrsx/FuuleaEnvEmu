@@ -390,14 +390,14 @@ public class MainHook implements IXposedHookLoadPackage {
                         }
                     });
                     XposedBridge.log("[FuEmu][Util]com.fuulea.venus.reactNative.RNHost->getUseDeveloperSupport() set to true");
-                    //此项为rn debug，需要悬浮窗权限
-                    XposedHelpers.findAndHookMethod("android.provider.Settings", finalClassLoader, "canDrawOverlays", Context.class, new XC_MethodHook() {
-                        @Override
-                        protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                            XposedBridge.log("[FuEmu][Util]android.provider.Settings->canDrawOverlays() called, permission granted");
-                            param.setResult(true);
-                        }
-                    });
+                    //rn debug需要悬浮窗，但manifest未声明
+//                    XposedHelpers.findAndHookMethod("android.provider.Settings", finalClassLoader, "canDrawOverlays", Context.class, new XC_MethodHook() {
+//                        @Override
+//                        protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+//                            XposedBridge.log("[FuEmu][Util]android.provider.Settings->canDrawOverlays() called, permission granted");
+//                            param.setResult(true);
+//                        }
+//                    });
                 }
 
 
@@ -420,6 +420,14 @@ public class MainHook implements IXposedHookLoadPackage {
                         }
                     });
                 }
+
+                //移除bugly
+                XposedHelpers.findAndHookMethod("com.fuulea.venus.MainApplication", finalClassLoader, "initBugly", "android.app.Application", new XC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                        param.setResult(null);
+                    }
+                });
 
 
 
