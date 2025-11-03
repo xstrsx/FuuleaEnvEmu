@@ -6,12 +6,24 @@ import android.app.Activity;
 import android.app.Application;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.net.http.X509TrustManagerExtensions;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
@@ -19,6 +31,8 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 import javax.net.ssl.KeyManager;
@@ -30,17 +44,20 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509ExtendedTrustManager;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
-import de.robv.android.xposed.XC_MethodReplacement;
-import de.robv.android.xposed.callbacks.XC_LoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
+import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
+import de.robv.android.xposed.callbacks.XC_LoadPackage;
+
 public class MainHook implements IXposedHookLoadPackage {
+    private prefsUtils prefs;
+    private Application mApplication;
 
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable  {
         if (!Objects.equals(lpparam.packageName, "com.fuulea.venus.g")) return;
-        prefsUtils prefs = new prefsUtils();
+        this.prefs = new prefsUtils();
         XposedHelpers.findAndHookMethod("com.stub.StubApp", lpparam.classLoader, "onCreate", new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
@@ -177,7 +194,7 @@ public class MainHook implements IXposedHookLoadPackage {
                 XposedHelpers.findAndHookMethod("com.fuulea.venus.reactNative.packages.governance.SystemGovernance",finalClassLoader,"getCurrentGovernanceName", new XC_MethodHook() {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                        super.beforeHookedMethod(param);
+                        super.afterHookedMethod(param);
                         XposedBridge.log("[FuEmu]com.fuulea.venus.reactNative.packages.governance.SystemGovernance->getCurrentGovernanceName");
                         param.setResult(prefs.getString("governance_environment", "HEM"));
                     }
@@ -430,18 +447,151 @@ public class MainHook implements IXposedHookLoadPackage {
                 });
 
 
+                hookRNLoader(finalClassLoader);
 
             }
         });
     }
 
-    public static ClassLoader getClassloader() {
+    private void hookRNLoader(ClassLoader finalClassLoader) {
+        XposedHelpers.findAndHookMethod("com.facebook.react.bridge.CatalystInstanceImpl", finalClassLoader, "loadScriptFromAssets", AssetManager.class, String.class, boolean.class, new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                String assetUrl = (String) param.args[1];
+                String fileName = new File(assetUrl).getName();
+                XposedBridge.log("[FuEmu][RN-Needle] CatalystInstanceImpl->loadScriptFromAssets() loading " + assetUrl);
+
+                boolean injectEnabled = prefs.getBoolean("rn_inject_enable", false);
+                boolean patchEnabled = prefs.getBoolean("rn_patch_enable", false);
+
+                if (!injectEnabled && !patchEnabled) {
+                    return;
+                }
+
+                AssetManager am = (AssetManager) param.args[0];
+                boolean loadSynchronously = (boolean) param.args[2];
+                String bundleString;
+                try (InputStream is = am.open(assetUrl.startsWith("assets://") ? assetUrl.substring("assets://".length()) : assetUrl);
+                     ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+                    byte[] buf = new byte[1024 * 16];
+                    int n;
+                    while ((n = is.read(buf)) >= 0) bos.write(buf, 0, n);
+                    bundleString = new String(bos.toByteArray(), StandardCharsets.UTF_8);
+                } catch (Throwable t) {
+                    XposedBridge.log("[FuEmu][RN-Needle] Failed to load " + assetUrl + ": " + t);
+                    return;
+                }
+
+                boolean modified = false;
+
+                // Handle Injection
+                if (injectEnabled) {
+                    String injectRulesJson = prefs.getString("rn_inject_rules", "[]");
+                    try {
+                        JSONArray rules = new JSONArray(injectRulesJson);
+                        for (int i = 0; i < rules.length(); i++) {
+                            JSONObject rule = rules.getJSONObject(i);
+                            if (rule.optBoolean("enabled", false) && fileName.equals(rule.optString("filename", ""))) {
+                                String codeToInject = rule.optString("code", "");
+                                if (!codeToInject.isEmpty()) {
+                                    bundleString = buildInjectedBundle(bundleString, codeToInject, true);
+                                    modified = true;
+                                    XposedBridge.log("[FuEmu][RN-Needle] Injected code into " + assetUrl);
+                                }
+                            }
+                        }
+                    } catch (JSONException e) {
+                        XposedBridge.log("[FuEmu][RN-Needle] Failed to parse inject rules: " + e);
+                    }
+                }
+
+                // Handle Patching
+                if (patchEnabled) {
+                    String patchRulesJson = prefs.getString("rn_patch_rules", "[]");
+                    try {
+                        JSONArray rules = new JSONArray(patchRulesJson);
+                        for (int i = 0; i < rules.length(); i++) {
+                            JSONObject rule = rules.getJSONObject(i);
+                            if (rule.optBoolean("enabled", false) && fileName.equals(rule.optString("filename", ""))) {
+                                String regex = rule.optString("regex", "");
+                                String replacement = rule.optString("replacement", "");
+                                if (!regex.isEmpty()) {
+                                    bundleString = buildPatchedBundle(bundleString, regex, replacement);
+                                    modified = true;
+                                    XposedBridge.log("[FuEmu][RN-Needle] Patched " + assetUrl + " with regex: " + regex);
+                                }
+                            }
+                        }
+                    } catch (JSONException e) {
+                        XposedBridge.log("[FuEmu][RN-Needle] Failed to parse patch rules: " + e);
+                    }
+                }
+
+                if (!modified) {
+                    return; // No changes, proceed with original method
+                }
+
+                File f;
+                try {
+                    f = File.createTempFile("rn_bundle_", ".js", mApplication.getCacheDir());
+                    try (FileOutputStream fos = new FileOutputStream(f)) {
+                        fos.write(bundleString.getBytes(StandardCharsets.UTF_8));
+                    }
+                } catch (Throwable t) {
+                    XposedBridge.log("[FuEmu][RN-Needle] Failed to save modified bundle: " + t);
+                    return;
+                }
+
+                try {
+                    Method jniLoadScriptFromFile = XposedHelpers.findMethodExact(param.thisObject.getClass(), "jniLoadScriptFromFile", String.class, String.class, boolean.class);
+                    jniLoadScriptFromFile.setAccessible(true);
+                    jniLoadScriptFromFile.invoke(param.thisObject, f.getAbsolutePath(), f.getAbsolutePath(), loadSynchronously);
+                    XposedBridge.log("[FuEmu][RN-Needle] Success invoking jniLoadScriptFromFile with modified bundle: " + f.getAbsolutePath());
+                    param.setResult(null); // Prevent original loadScriptFromAssets from running
+                } catch (Throwable t) {
+                    XposedBridge.log("[FuEmu][RN-Needle] Failed to invoke jniLoadScriptFromFile: " + t);
+                }
+            }
+        });
+    }
+
+    private static String buildInjectedBundle(String original, String payload, boolean prepend) {
+        if (payload == null || payload.isEmpty()) return original != null ? original : "";
+        if (original == null) original = "";
+        if (prepend) {
+            StringBuilder sb = new StringBuilder(payload.length() + original.length() + 32);
+            sb.append(payload);
+            if (!payload.endsWith("\n")) sb.append('\n');
+            sb.append(original);
+            return sb.toString();
+        } else {
+            StringBuilder sb = new StringBuilder(original.length() + payload.length() + 32);
+            sb.append(original);
+            if (!original.endsWith("\n")) sb.append('\n');
+            sb.append(payload);
+            return sb.toString();
+        }
+    }
+
+    private static String buildPatchedBundle(String original, String regex, String replacement) {
+        if (regex == null || regex.isEmpty()) return original != null ? original : "";
+        if (original == null) original = "";
+        if (replacement == null) replacement = "";
+        try {
+            return original.replaceAll(regex, Matcher.quoteReplacement(replacement));
+        } catch (Exception e) {
+            XposedBridge.log("[FuEmu][RN-Needle] Error during regex replace: " + e.getMessage());
+            return original;
+        }
+    }
+
+    public ClassLoader getClassloader() {
         ClassLoader resultClassloader = null;
         Class<?> activityThreadClass = XposedHelpers.findClass("android.app.ActivityThread", null);
         Object currentActivityThread = XposedHelpers.callStaticMethod(activityThreadClass, "currentActivityThread");
         Object mBoundApplication = XposedHelpers.getObjectField(currentActivityThread, "mBoundApplication");
         Object loadedApkInfo = XposedHelpers.getObjectField(mBoundApplication, "info");
-        Application mApplication = (Application) XposedHelpers.getObjectField(loadedApkInfo, "mApplication");
+        this.mApplication = (Application) XposedHelpers.getObjectField(loadedApkInfo, "mApplication");
         resultClassloader = mApplication.getClassLoader();
         return resultClassloader;
     }

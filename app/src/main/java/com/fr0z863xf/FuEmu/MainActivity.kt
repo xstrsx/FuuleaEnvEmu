@@ -16,6 +16,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
@@ -38,6 +40,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import androidx.core.net.toUri
 import androidx.core.content.edit
+import org.json.JSONArray
 import org.json.JSONException
 import java.io.File
 import java.io.FileWriter
@@ -50,6 +53,9 @@ data class GitHubReleaseInfo(
     val body: String,
     val assets: List<GitHubAsset>
 )
+
+data class InjectRule(var enabled: Boolean, var filename: String, var code: String)
+data class PatchRule(var enabled: Boolean, var filename: String, var regex: String, var replacement: String)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -198,6 +204,7 @@ fun MainScreen() {
             SystemInfoCard(sharedPreferences)
             GovernanceEnvironmentCard(sharedPreferences)
             UtilHooksCard(sharedPreferences)
+            RNHooksCard(sharedPreferences)
             ProjectInfoCard()
         }
     }
@@ -301,6 +308,178 @@ fun UpdateInfoDialog(releaseInfo: GitHubReleaseInfo, onDismiss: () -> Unit, cont
     )
 }
 
+@Composable
+fun RNHooksCard(sharedPreferences: SharedPreferences) {
+    val context = LocalContext.current
+    var rnInjectEnable by remember { mutableStateOf(sharedPreferences.getBoolean("rn_inject_enable", false)) }
+    var rnPatchEnable by remember { mutableStateOf(sharedPreferences.getBoolean("rn_patch_enable", false)) }
+
+    val initialInjectRules = sharedPreferences.getString("rn_inject_rules", "[]") ?: "[]"
+    val initialPatchRules = sharedPreferences.getString("rn_patch_rules", "[]") ?: "[]"
+
+    val injectRulesList = remember { mutableStateListOf<InjectRule>().apply { addAll(parseInjectRules(initialInjectRules)) } }
+    val patchRulesList = remember { mutableStateListOf<PatchRule>().apply { addAll(parsePatchRules(initialPatchRules)) } }
+
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("RN JS层功能", style = MaterialTheme.typography.titleLarge)
+
+            // Inject rules
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("启用注入")
+                Spacer(Modifier.weight(1f))
+                Switch(checked = rnInjectEnable, onCheckedChange = { rnInjectEnable = it })
+            }
+            injectRulesList.forEachIndexed { index, rule ->
+                RuleEditor(rule = rule, onRuleChange = { injectRulesList[index] = it as InjectRule }, onDelete = { injectRulesList.removeAt(index) })
+            }
+            Button(onClick = { injectRulesList.add(InjectRule(true, "", "")) }) {
+                Icon(Icons.Default.Add, contentDescription = "添加注入规则")
+                Spacer(Modifier.width(4.dp))
+                Text("添加注入规则")
+            }
+
+            // Patch rules
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("启用补丁")
+                Spacer(Modifier.weight(1f))
+                Switch(checked = rnPatchEnable, onCheckedChange = { rnPatchEnable = it })
+            }
+            patchRulesList.forEachIndexed { index, rule ->
+                RuleEditor(rule = rule, onRuleChange = { patchRulesList[index] = it as PatchRule }, onDelete = { patchRulesList.removeAt(index) })
+            }
+            Button(onClick = { patchRulesList.add(PatchRule(true, "", "", "")) }) {
+                Icon(Icons.Default.Add, contentDescription = "添加补丁规则")
+                Spacer(Modifier.width(4.dp))
+                Text("添加补丁规则")
+            }
+
+            // Save button
+            Button(
+                onClick = {
+                    sharedPreferences.edit()
+                        .putBoolean("rn_inject_enable", rnInjectEnable)
+                        .putString("rn_inject_rules", injectRulesToJson(injectRulesList))
+                        .putBoolean("rn_patch_enable", rnPatchEnable)
+                        .putString("rn_patch_rules", patchRulesToJson(patchRulesList))
+                        .apply()
+                    savePreferencesToJson(context, sharedPreferences)
+                },
+                modifier = Modifier.align(Alignment.End)
+            ) {
+                Text("保存")
+            }
+        }
+    }
+}
+
+@Composable
+fun RuleEditor(rule: Any, onRuleChange: (Any) -> Unit, onDelete: () -> Unit) {
+    when (rule) {
+        is InjectRule -> {
+            var enabled by remember { mutableStateOf(rule.enabled) }
+            var filename by remember { mutableStateOf(TextFieldValue(rule.filename)) }
+            var code by remember { mutableStateOf(TextFieldValue(rule.code)) }
+
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Switch(checked = enabled, onCheckedChange = { enabled = it; onRuleChange(rule.copy(enabled = it)) })
+                    Spacer(Modifier.width(8.dp))
+                    OutlinedTextField(value = filename, onValueChange = { filename = it; onRuleChange(rule.copy(filename = it.text)) }, label = { Text("文件名") }, modifier = Modifier.weight(1f))
+                    IconButton(onClick = onDelete) {
+                        Icon(Icons.Default.Delete, contentDescription = "删除规则")
+                    }
+                }
+                OutlinedTextField(value = code, onValueChange = { code = it; onRuleChange(rule.copy(code = it.text)) }, label = { Text("注入代码") }, modifier = Modifier.fillMaxWidth().height(100.dp))
+            }
+        }
+        is PatchRule -> {
+            var enabled by remember { mutableStateOf(rule.enabled) }
+            var filename by remember { mutableStateOf(TextFieldValue(rule.filename)) }
+            var regex by remember { mutableStateOf(TextFieldValue(rule.regex)) }
+            var replacement by remember { mutableStateOf(TextFieldValue(rule.replacement)) }
+
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Switch(checked = enabled, onCheckedChange = { enabled = it; onRuleChange(rule.copy(enabled = it)) })
+                    Spacer(Modifier.width(8.dp))
+                    OutlinedTextField(value = filename, onValueChange = { filename = it; onRuleChange(rule.copy(filename = it.text)) }, label = { Text("文件名") }, modifier = Modifier.weight(1f))
+                    IconButton(onClick = onDelete) {
+                        Icon(Icons.Default.Delete, contentDescription = "删除规则")
+                    }
+                }
+                OutlinedTextField(value = regex, onValueChange = { regex = it; onRuleChange(rule.copy(regex = it.text)) }, label = { Text("正则") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = replacement, onValueChange = { replacement = it; onRuleChange(rule.copy(replacement = it.text)) }, label = { Text("替换为") }, modifier = Modifier.fillMaxWidth())
+            }
+        }
+    }
+}
+
+fun parseInjectRules(json: String): List<InjectRule> {
+    val rules = mutableListOf<InjectRule>()
+    try {
+        val jsonArray = JSONArray(json)
+        for (i in 0 until jsonArray.length()) {
+            val jsonObject = jsonArray.getJSONObject(i)
+            rules.add(
+                InjectRule(
+                    enabled = jsonObject.optBoolean("enabled", true),
+                    filename = jsonObject.optString("filename", ""),
+                    code = jsonObject.optString("code", "")
+                )
+            )
+        }
+    } catch (e: JSONException) {
+        // Log error or handle
+    }
+    return rules
+}
+
+fun parsePatchRules(json: String): List<PatchRule> {
+    val rules = mutableListOf<PatchRule>()
+    try {
+        val jsonArray = JSONArray(json)
+        for (i in 0 until jsonArray.length()) {
+            val jsonObject = jsonArray.getJSONObject(i)
+            rules.add(
+                PatchRule(
+                    enabled = jsonObject.optBoolean("enabled", true),
+                    filename = jsonObject.optString("filename", ""),
+                    regex = jsonObject.optString("regex", ""),
+                    replacement = jsonObject.optString("replacement", "")
+                )
+            )
+        }
+    } catch (e: JSONException) {
+        // Log error or handle
+    }
+    return rules
+}
+
+fun injectRulesToJson(rules: List<InjectRule>): String {
+    val jsonArray = JSONArray()
+    for (rule in rules) {
+        val jsonObject = JSONObject()
+        jsonObject.put("enabled", rule.enabled)
+        jsonObject.put("filename", rule.filename)
+        jsonObject.put("code", rule.code)
+        jsonArray.put(jsonObject)
+    }
+    return jsonArray.toString()
+}
+
+fun patchRulesToJson(rules: List<PatchRule>): String {
+    val jsonArray = JSONArray()
+    for (rule in rules) {
+        val jsonObject = JSONObject()
+        jsonObject.put("enabled", rule.enabled)
+        jsonObject.put("filename", rule.filename)
+        jsonObject.put("regex", rule.regex)
+        jsonObject.put("replacement", rule.replacement)
+        jsonArray.put(jsonObject)
+    }
+    return jsonArray.toString()
+}
 
 @Composable
 fun SystemInfoCard(sharedPreferences: SharedPreferences) {
