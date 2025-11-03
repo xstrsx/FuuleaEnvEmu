@@ -533,7 +533,7 @@ public class MainHook implements IXposedHookLoadPackage {
 
                 File f;
                 try {
-                    f = File.createTempFile("rn_bundle_", ".js", mApplication.getCacheDir());
+                    f = File.createTempFile(fileName, ".mod", mApplication.getCacheDir());
                     try (FileOutputStream fos = new FileOutputStream(f)) {
                         fos.write(bundleString.getBytes(StandardCharsets.UTF_8));
                     }
