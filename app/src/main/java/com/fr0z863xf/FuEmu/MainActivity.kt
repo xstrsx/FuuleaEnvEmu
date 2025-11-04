@@ -522,48 +522,48 @@ fun SystemInfoCard(sharedPreferences: SharedPreferences) {
                 label = { Text("品牌 (BRAND)") },
                 modifier = Modifier.fillMaxWidth()
             )
-            OutlinedTextField(
-                value = modelText,
-                onValueChange = { modelText = it },
-                label = { Text("型号 (MODEL)") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = productText,
-                onValueChange = { productText = it },
-                label = { Text("产品 (PRODUCT)") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = manufacturerText,
-                onValueChange = { manufacturerText = it },
-                label = { Text("制造商 (MANUFACTURER)") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = hardwareText,
-                onValueChange = { hardwareText = it },
-                label = { Text("硬件 (HARDWARE)") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = fingerprintText,
-                onValueChange = { fingerprintText = it },
-                label = { Text("设备指纹 (FINGERPRINT)") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = displayText,
-                onValueChange = { displayText = it },
-                label = { Text("显示 (DISPLAY)") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = boardText,
-                onValueChange = { boardText = it },
-                label = { Text("主板 (BOARD)") },
-                modifier = Modifier.fillMaxWidth()
-            )
+//            OutlinedTextField(
+//                value = modelText,
+//                onValueChange = { modelText = it },
+//                label = { Text("型号 (MODEL)") },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//            OutlinedTextField(
+//                value = productText,
+//                onValueChange = { productText = it },
+//                label = { Text("产品 (PRODUCT)") },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//            OutlinedTextField(
+//                value = manufacturerText,
+//                onValueChange = { manufacturerText = it },
+//                label = { Text("制造商 (MANUFACTURER)") },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//            OutlinedTextField(
+//                value = hardwareText,
+//                onValueChange = { hardwareText = it },
+//                label = { Text("硬件 (HARDWARE)") },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//            OutlinedTextField(
+//                value = fingerprintText,
+//                onValueChange = { fingerprintText = it },
+//                label = { Text("设备指纹 (FINGERPRINT)") },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//            OutlinedTextField(
+//                value = displayText,
+//                onValueChange = { displayText = it },
+//                label = { Text("显示 (DISPLAY)") },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//            OutlinedTextField(
+//                value = boardText,
+//                onValueChange = { boardText = it },
+//                label = { Text("主板 (BOARD)") },
+//                modifier = Modifier.fillMaxWidth()
+//            )
             OutlinedTextField(
                 value = deviceInfoText,
                 onValueChange = { deviceInfoText = it },
@@ -642,18 +642,18 @@ fun SystemInfoCard(sharedPreferences: SharedPreferences) {
 //                label = { Text("SDK整数 (SDK_INT和SDK)") },
 //                modifier = Modifier.fillMaxWidth()
 //            )
-            OutlinedTextField(
-                value = basebandText,
-                onValueChange = { basebandText = it },
-                label = { Text("基带版本 (Baseband)") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = kernelVersionText,
-                onValueChange = { kernelVersionText = it },
-                label = { Text("内核版本 (Kernel Version)") },
-                modifier = Modifier.fillMaxWidth()
-            )
+//            OutlinedTextField(
+//                value = basebandText,
+//                onValueChange = { basebandText = it },
+//                label = { Text("基带版本 (Baseband)") },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//            OutlinedTextField(
+//                value = kernelVersionText,
+//                onValueChange = { kernelVersionText = it },
+//                label = { Text("内核版本 (Kernel Version)") },
+//                modifier = Modifier.fillMaxWidth()
+//            )
             OutlinedTextField(
                 value = androidIdText,
                 onValueChange = { androidIdText = it },
@@ -665,13 +665,13 @@ fun SystemInfoCard(sharedPreferences: SharedPreferences) {
                     sharedPreferences.edit {
                     putString("android_version", androidVersionText.text)
                     putString("brand", brandText.text)
-                    putString("model", modelText.text)
-                    putString("product", productText.text)
-                    putString("manufacturer", manufacturerText.text)
-                    putString("hardware", hardwareText.text)
-                    putString("fingerprint", fingerprintText.text)
-                    putString("display", displayText.text)
-                    putString("board", boardText.text)
+//                    putString("model", modelText.text)
+//                    putString("product", productText.text)
+//                    putString("manufacturer", manufacturerText.text)
+//                    putString("hardware", hardwareText.text)
+//                    putString("fingerprint", fingerprintText.text)
+//                    putString("display", displayText.text)
+//                    putString("board", boardText.text)
                     putString("device_info", deviceInfoText.text)
                     putString("device_name", deviceNameText.text)
                     putString("serial_number", serialNumberText.text)
@@ -688,8 +688,8 @@ fun SystemInfoCard(sharedPreferences: SharedPreferences) {
 //                    putString("codename", codenameText.text)
 //                    putString("incremental", incrementalText.text)
 //                    putString("sdk_int", sdkIntText.text)
-                    putString("baseband", basebandText.text)
-                    putString("kernel_version", kernelVersionText.text)
+//                    putString("baseband", basebandText.text)
+//                    putString("kernel_version", kernelVersionText.text)
                     putString("android_id", androidIdText.text)
                 }
                     savePreferencesToJson(context, sharedPreferences)

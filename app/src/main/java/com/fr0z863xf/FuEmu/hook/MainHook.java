@@ -83,13 +83,13 @@ public class MainHook implements IXposedHookLoadPackage {
                 // 实际上没几个是真正需要的:)
                 XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build$VERSION", finalClassLoader), "RELEASE", prefs.getString("android_version", Build.VERSION.RELEASE));
                 XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"BRAND",prefs.getString("brand", Build.BRAND));
-                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"MODEL",prefs.getString("model", Build.MODEL));
-                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"PRODUCT",prefs.getString("product", Build.PRODUCT));
-                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"MANUFACTURER",prefs.getString("manufacturer", Build.MANUFACTURER));
-                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"HARDWARE",prefs.getString("hardware", Build.HARDWARE));
-                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"FINGERPRINT",prefs.getString("fingerprint", Build.FINGERPRINT));
-                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"DISPLAY",prefs.getString("display", Build.DISPLAY));
-                XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"BOARD",prefs.getString("board", Build.BOARD));
+                //XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"MODEL",prefs.getString("model", Build.MODEL));
+                //XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"PRODUCT",prefs.getString("product", Build.PRODUCT));
+                //XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"MANUFACTURER",prefs.getString("manufacturer", Build.MANUFACTURER));
+                //XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"HARDWARE",prefs.getString("hardware", Build.HARDWARE));
+                //XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"FINGERPRINT",prefs.getString("fingerprint", Build.FINGERPRINT));
+                //XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"DISPLAY",prefs.getString("display", Build.DISPLAY));
+                //XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"BOARD",prefs.getString("board", Build.BOARD));
                 XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"DEVICE",prefs.getString("device_info", Build.DEVICE));
                 //XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"SERIAL",prefs.getString("serial_number", Build.SERIAL));
                 //XposedHelpers.setStaticObjectField(XposedHelpers.findClass("android.os.Build", finalClassLoader),"BOOTLOADER",prefs.getString("bootloader", Build.BOOTLOADER));
@@ -105,32 +105,32 @@ public class MainHook implements IXposedHookLoadPackage {
                 //XposedHelpers.setStaticIntField(XposedHelpers.findClass("android.os.Build$VERSION", finalClassLoader),"SDK", Integer.parseInt(prefs.getString("sdk_int", String.valueOf(Build.VERSION.SDK_INT))));
 
                 // Hook for Baseband version (基带版本)
-                XposedHelpers.findAndHookMethod("android.os.Build", finalClassLoader, "getRadioVersion", new XC_MethodHook() {
-                    @Override
-                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                        super.afterHookedMethod(param);
-                        String baseband = prefs.getString("baseband", null);
-                        if (baseband != null) {
-                            param.setResult(baseband);
-                            XposedBridge.log("[FuEmu] Hooked getRadioVersion to: " + baseband);
-                        }
-                    }
-                });
+//                XposedHelpers.findAndHookMethod("android.os.Build", finalClassLoader, "getRadioVersion", new XC_MethodHook() {
+//                    @Override
+//                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+//                        super.afterHookedMethod(param);
+//                        String baseband = prefs.getString("baseband", null);
+//                        if (baseband != null) {
+//                            param.setResult(baseband);
+//                            XposedBridge.log("[FuEmu] Hooked getRadioVersion to: " + baseband);
+//                        }
+//                    }
+//                });
 
                 // Hook for Kernel version (内核版本)
-                XposedHelpers.findAndHookMethod("java.lang.System", finalClassLoader, "getProperty", String.class, new XC_MethodHook() {
-                    @Override
-                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                        super.afterHookedMethod(param);
-                        if (param.args[0] != null && param.args[0].equals("os.version")) {
-                            String kernelVersion = prefs.getString("kernel_version", null);
-                            if (kernelVersion != null) {
-                                param.setResult(kernelVersion);
-                                XposedBridge.log("[FuEmu] Hooked os.version to: " + kernelVersion);
-                            }
-                        }
-                    }
-                });
+//                XposedHelpers.findAndHookMethod("java.lang.System", finalClassLoader, "getProperty", String.class, new XC_MethodHook() {
+//                    @Override
+//                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+//                        super.afterHookedMethod(param);
+//                        if (param.args[0] != null && param.args[0].equals("os.version")) {
+//                            String kernelVersion = prefs.getString("kernel_version", null);
+//                            if (kernelVersion != null) {
+//                                param.setResult(kernelVersion);
+//                                XposedBridge.log("[FuEmu] Hooked os.version to: " + kernelVersion);
+//                            }
+//                        }
+//                    }
+//                });
 
                 // Hook for Android ID
                 XposedHelpers.findAndHookMethod("android.provider.Settings.Secure", finalClassLoader, "getString", ContentResolver.class, String.class, new XC_MethodHook() {
