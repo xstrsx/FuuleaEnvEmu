@@ -15,16 +15,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -169,7 +165,7 @@ fun MainScreen() {
                 actions = {
                     Text(if (isCheckingForUpdate) "正在检查更新..." else "检查更新->")
                     IconButton(onClick = { checkForUpdates() }, enabled = !isCheckingForUpdate) {
-                        Icon(Icons.Filled.Refresh, contentDescription = "检查更新")
+                        Icon(painterResource(R.drawable.refresh_fill1_24px), contentDescription = "检查更新")
 
                     }
                 }
@@ -184,7 +180,7 @@ fun MainScreen() {
                 startActivity(context, launchIntent,null)
             }) {
                 Row(modifier = Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Filled.PlayArrow, contentDescription = "启动")
+                    Icon(painterResource(R.drawable.play_arrow_fill1_24px), contentDescription = "启动")
                     Spacer(Modifier.width(8.dp))
                     Text("启动")
                 }
@@ -334,7 +330,7 @@ fun RNHooksCard(sharedPreferences: SharedPreferences) {
                 RuleEditor(rule = rule, onRuleChange = { injectRulesList[index] = it as InjectRule }, onDelete = { injectRulesList.removeAt(index) })
             }
             Button(onClick = { injectRulesList.add(InjectRule(true, "", "")) }) {
-                Icon(Icons.Default.Add, contentDescription = "添加注入规则")
+                Icon(painterResource(R.drawable.add_24px), contentDescription = "添加注入规则")
                 Spacer(Modifier.width(4.dp))
                 Text("添加注入规则")
             }
@@ -349,7 +345,7 @@ fun RNHooksCard(sharedPreferences: SharedPreferences) {
                 RuleEditor(rule = rule, onRuleChange = { patchRulesList[index] = it as PatchRule }, onDelete = { patchRulesList.removeAt(index) })
             }
             Button(onClick = { patchRulesList.add(PatchRule(true, "", "", "")) }) {
-                Icon(Icons.Default.Add, contentDescription = "添加补丁规则")
+                Icon(painterResource(R.drawable.add_24px), contentDescription = "添加补丁规则")
                 Spacer(Modifier.width(4.dp))
                 Text("添加补丁规则")
             }
@@ -387,7 +383,7 @@ fun RuleEditor(rule: Any, onRuleChange: (Any) -> Unit, onDelete: () -> Unit) {
                     Spacer(Modifier.width(8.dp))
                     OutlinedTextField(value = filename, onValueChange = { filename = it; onRuleChange(rule.copy(filename = it.text)) }, label = { Text("文件名") }, modifier = Modifier.weight(1f))
                     IconButton(onClick = onDelete) {
-                        Icon(Icons.Default.Delete, contentDescription = "删除规则")
+                        Icon(painterResource(R.drawable.delete_24px), contentDescription = "删除规则")
                     }
                 }
                 OutlinedTextField(value = code, onValueChange = { code = it; onRuleChange(rule.copy(code = it.text)) }, label = { Text("注入代码") }, modifier = Modifier.fillMaxWidth().height(100.dp))
@@ -405,7 +401,7 @@ fun RuleEditor(rule: Any, onRuleChange: (Any) -> Unit, onDelete: () -> Unit) {
                     Spacer(Modifier.width(8.dp))
                     OutlinedTextField(value = filename, onValueChange = { filename = it; onRuleChange(rule.copy(filename = it.text)) }, label = { Text("文件名") }, modifier = Modifier.weight(1f))
                     IconButton(onClick = onDelete) {
-                        Icon(Icons.Default.Delete, contentDescription = "删除规则")
+                        Icon(painterResource(R.drawable.delete_24px), contentDescription = "删除规则")
                     }
                 }
                 OutlinedTextField(value = regex, onValueChange = { regex = it; onRuleChange(rule.copy(regex = it.text)) }, label = { Text("正则") }, modifier = Modifier.fillMaxWidth())
