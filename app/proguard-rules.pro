@@ -46,3 +46,7 @@
 -keepclassmembers class * extends de.robv.android.xposed.XC_MethodReplacement {
    protected void replaceHookedMethod(de.robv.android.xposed.XC_MethodHook.MethodHookParam);
 }
+
+-keep class com.fr0z863xf.FuEmu.hook.MainHook {
+    public <init>();
+}
