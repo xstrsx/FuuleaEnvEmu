@@ -13,8 +13,8 @@ android {
         applicationId = "com.fr0z863xf.FuEmu"
         minSdk = 29
         targetSdk = 36
-        versionCode = 5
-        versionName = "2.0.4"
+        versionCode = 6
+        versionName = "2.0.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 //
@@ -28,6 +28,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
