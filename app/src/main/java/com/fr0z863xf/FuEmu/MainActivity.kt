@@ -4,6 +4,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
@@ -35,11 +36,11 @@ import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import androidx.core.net.toUri
-import androidx.core.content.edit
 import org.json.JSONArray
 import org.json.JSONException
 import java.io.File
 import java.io.FileWriter
+import androidx.core.content.edit
 
 
 data class GitHubAsset(val name: String, val browserDownloadUrl: String)
@@ -69,7 +70,13 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen() {
     val context = LocalContext.current
-    val sharedPreferences = remember { context.getSharedPreferences("FuEmuPrefs", Context.MODE_PRIVATE) }
+    val appPrefs = remember { context.getSharedPreferences("FuEmuAppPrefs", Context.MODE_PRIVATE) }
+    val ignoreModuleWarning = remember {
+        mutableStateOf(appPrefs.getBoolean("ignore_module_warning", false))
+    }
+    val sharedPreferences = remember {
+        context.getSharedPreferences("FuEmuPrefs", Context.MODE_PRIVATE)
+    }
     val coroutineScope = rememberCoroutineScope()
 
     var showUpdateDialog by remember { mutableStateOf(false) }
@@ -188,20 +195,42 @@ fun MainScreen() {
         },
         floatingActionButtonPosition = FabPosition.End
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            SystemInfoCard(sharedPreferences)
-            GovernanceEnvironmentCard(sharedPreferences)
-            UtilHooksCard(sharedPreferences)
-            RNHooksCard(sharedPreferences)
-            ProjectInfoCard()
+        val requiresXsp = Build.VERSION.SDK_INT < Build.VERSION_CODES.S
+        val moduleActive = ModuleStatus.isModuleActive()
+        if (requiresXsp && !moduleActive && !ignoreModuleWarning.value) {
+            Column(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .fillMaxSize()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text("检测到模块未激活", style = MaterialTheme.typography.titleLarge)
+                Text("当前系统版本需要 XSharedPreferences，请先在 LSPosed 中激活模块。")
+                Button(onClick = {
+                    ignoreModuleWarning.value = true
+                    appPrefs.edit { putBoolean("ignore_module_warning", true) }
+                }) {
+                    Text("忽略警告继续")
+                }
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                SystemInfoCard(sharedPreferences)
+                GovernanceEnvironmentCard(sharedPreferences)
+                UtilHooksCard(sharedPreferences)
+                RNHooksCard(sharedPreferences)
+                ProjectInfoCard()
+            }
         }
     }
 
@@ -212,6 +241,32 @@ fun MainScreen() {
             context = context
         )
     }
+}
+
+fun useWorldReadablePrefs(context: Context): SharedPreferences? {
+    return try {
+        context.getSharedPreferences("FuEmuPrefs", Context.MODE_WORLD_READABLE)
+    } catch (e: Throwable) {
+        Log.e("MainScreen", "Failed to open WORLD_READABLE prefs", e)
+        null
+    }
+}
+
+fun savePreferencesWithFallback(context: Context, normalPrefs: SharedPreferences, action: (SharedPreferences.Editor) -> Unit) {
+    val requiresXsp = Build.VERSION.SDK_INT < Build.VERSION_CODES.S
+    if (!requiresXsp) {
+        action(normalPrefs.edit())
+        savePreferencesToJson(context, normalPrefs)
+        return
+    }
+
+    val worldPrefs = useWorldReadablePrefs(context)
+    if (worldPrefs == null) {
+        action(normalPrefs.edit())
+        savePreferencesToJson(context, normalPrefs)
+        return
+    }
+    action(worldPrefs.edit())
 }
 
 fun savePreferencesToJson(context: Context, sharedPreferences: SharedPreferences) {
@@ -353,13 +408,13 @@ fun RNHooksCard(sharedPreferences: SharedPreferences) {
             // Save button
             Button(
                 onClick = {
-                    sharedPreferences.edit()
-                        .putBoolean("rn_inject_enable", rnInjectEnable)
-                        .putString("rn_inject_rules", injectRulesToJson(injectRulesList))
-                        .putBoolean("rn_patch_enable", rnPatchEnable)
-                        .putString("rn_patch_rules", patchRulesToJson(patchRulesList))
-                        .apply()
-                    savePreferencesToJson(context, sharedPreferences)
+                    savePreferencesWithFallback(context, sharedPreferences) { editor ->
+                        editor.putBoolean("rn_inject_enable", rnInjectEnable)
+                            .putString("rn_inject_rules", injectRulesToJson(injectRulesList))
+                            .putBoolean("rn_patch_enable", rnPatchEnable)
+                            .putString("rn_patch_rules", patchRulesToJson(patchRulesList))
+                        editor.apply()
+                    }
                 },
                 modifier = Modifier.align(Alignment.End)
             ) {
@@ -662,9 +717,9 @@ fun SystemInfoCard(sharedPreferences: SharedPreferences) {
             )
             Button(
                 onClick = {
-                    sharedPreferences.edit {
-                    putString("android_version", androidVersionText.text)
-                    putString("brand", brandText.text)
+                    savePreferencesWithFallback(context, sharedPreferences) { editor ->
+                        editor.putString("android_version", androidVersionText.text)
+                        editor.putString("brand", brandText.text)
 //                    putString("model", modelText.text)
 //                    putString("product", productText.text)
 //                    putString("manufacturer", manufacturerText.text)
@@ -672,9 +727,9 @@ fun SystemInfoCard(sharedPreferences: SharedPreferences) {
 //                    putString("fingerprint", fingerprintText.text)
 //                    putString("display", displayText.text)
 //                    putString("board", boardText.text)
-                    putString("device_info", deviceInfoText.text)
-                    putString("device_name", deviceNameText.text)
-                    putString("serial_number", serialNumberText.text)
+                        editor.putString("device_info", deviceInfoText.text)
+                        editor.putString("device_name", deviceNameText.text)
+                        editor.putString("serial_number", serialNumberText.text)
 //                    putString("bootloader", bootloaderText.text)
 //                    putString("host", hostText.text)
 //                    putString("id", idText.text)
@@ -690,9 +745,9 @@ fun SystemInfoCard(sharedPreferences: SharedPreferences) {
 //                    putString("sdk_int", sdkIntText.text)
 //                    putString("baseband", basebandText.text)
 //                    putString("kernel_version", kernelVersionText.text)
-                    putString("android_id", androidIdText.text)
-                }
-                    savePreferencesToJson(context, sharedPreferences)
+                        editor.putString("android_id", androidIdText.text)
+                        editor.apply()
+                    }
                     //Toast.makeText(context, "设备特征已保存", Toast.LENGTH_SHORT).show()
                 },
                 modifier = Modifier.align(Alignment.End)
@@ -745,10 +800,10 @@ fun GovernanceEnvironmentCard(sharedPreferences: SharedPreferences) {
             }
             Button(
                 onClick = {
-                    sharedPreferences.edit {
-                    putString("governance_environment", selectedOptionText)
-                }
-                    savePreferencesToJson(context, sharedPreferences)
+                    savePreferencesWithFallback(context, sharedPreferences) { editor ->
+                        editor.putString("governance_environment", selectedOptionText)
+                        editor.apply()
+                    }
                     //Toast.makeText(context, "管控环境已保存", Toast.LENGTH_SHORT).show()
                 },
                 modifier = Modifier.align(Alignment.End)
@@ -801,12 +856,12 @@ fun UtilHooksCard(sharedPreferences: SharedPreferences) {
 
             Button(
                 onClick = {
-                    sharedPreferences.edit {
-                        putBoolean("utils_set_UseDeveloperSupport_true", useDeveloperSupport)
+                    savePreferencesWithFallback(context, sharedPreferences) { editor ->
+                        editor.putBoolean("utils_set_UseDeveloperSupport_true", useDeveloperSupport)
                             .putBoolean("utils_enableWebviewDebugging", enableWebviewDebugging)
                             .putBoolean("utils_set_isWifiProxy_false", isWifiProxy)
+                        editor.apply()
                     }
-                    savePreferencesToJson(context, sharedPreferences)
                 },
                 modifier = Modifier.align(Alignment.End)
             ) {

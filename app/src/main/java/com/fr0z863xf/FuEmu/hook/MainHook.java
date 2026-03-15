@@ -6,6 +6,7 @@ import android.app.Activity;
 import android.app.Application;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.net.http.X509TrustManagerExtensions;
 import android.os.Build;
@@ -49,15 +50,36 @@ import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
+import de.robv.android.xposed.XSharedPreferences;
 
 public class MainHook implements IXposedHookLoadPackage {
-    private prefsUtils prefs;
+    private SharedPreferences prefs;
     private Application mApplication;
 
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable  {
+        if (Objects.equals(lpparam.packageName, "com.fr0z863xf.FuEmu")) {
+            try {
+                Class<?> moduleStatus = XposedHelpers.findClass("com.fr0z863xf.FuEmu.ModuleStatus", lpparam.classLoader);
+                XposedHelpers.setStaticBooleanField(moduleStatus, "isActive", true);
+            } catch (Throwable t) {
+                XposedBridge.log("[FuEmu] 设置模块激活标记失败: " + t);
+            }
+            return;
+        }
+
         if (!Objects.equals(lpparam.packageName, "com.fuulea.venus.g")) return;
-        this.prefs = new prefsUtils();
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            XSharedPreferences xPrefs = new XSharedPreferences("com.fr0z863xf.FuEmu", "FuEmuPrefs");
+            try {
+                xPrefs.reload();
+            } catch (Throwable t) {
+                XposedBridge.log("[FuEmu] XSharedPreferences reload 失败: " + t);
+            }
+            this.prefs = xPrefs;
+        } else {
+            this.prefs = new prefsUtils();
+        }
         XposedHelpers.findAndHookMethod("com.stub.StubApp", lpparam.classLoader, "onCreate", new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {

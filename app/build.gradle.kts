@@ -11,12 +11,18 @@ android {
 
     defaultConfig {
         applicationId = "com.fr0z863xf.FuEmu"
-        minSdk = 31
+        minSdk = 29
         targetSdk = 36
         versionCode = 5
         versionName = "2.0.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+//
+//        externalNativeBuild {
+//            cmake {
+//                cppFlags += "-std=c++17"
+//            }
+//        }
     }
 
     buildTypes {
@@ -43,10 +49,17 @@ android {
     }
 }
 
+kotlin {
+    compilerOptions {
+        languageVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_3)
+        jvmTarget.set(JvmTarget.JVM_21)
+    }
+}
+
 dependencies {
     implementation(libs.core.ktx)
-    //implementation(files("libxposed/api-100.aar"))
     compileOnlyApi(libs.xposed.api)
+    //compileOnlyApi(files("libs/api-100.aar"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
